@@ -23,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -83,7 +84,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ApiResponse<String> login(LoginDTO loginDTO) {
-        Authentication authentication = authenticationProvider.authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword()));
+        Authentication authentication;
+        try {
+            authentication = authenticationProvider.authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword()));
+        } catch (AuthenticationException authenticationException) {
+            return ApiResponse.<String>builder()
+                    .code(401)
+                    .data(null)
+                    .message("username or password is invalid")
+                    .build();
+        }
         User user = (User) authentication.getPrincipal();
 
         var now = Instant.now();

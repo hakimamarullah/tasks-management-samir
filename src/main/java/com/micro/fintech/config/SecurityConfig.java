@@ -7,12 +7,10 @@ Created on 5/28/2024 6:35 PM
 Version 1.0
 */
 
+import com.micro.fintech.service.AuthUserDetailsService;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
-import com.micro.fintech.service.AuthUserDetailsService;
-import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
-import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -39,12 +37,6 @@ import java.security.interfaces.RSAPublicKey;
 @Configuration
 @PropertySource("classpath:jwt.properties")
 @PropertySource("classpath:application.properties")
-@SecurityScheme(
-        name = "Bearer Authentication",
-        type = SecuritySchemeType.HTTP,
-        bearerFormat = "JWT",
-        scheme = "bearer"
-)
 public class SecurityConfig {
 
     private final AuthUserDetailsService authUserDetailsService;
@@ -59,8 +51,6 @@ public class SecurityConfig {
 
     @Value("${jwt.private.key}")
     private RSAPrivateKey rsaPrivateKey;
-
-
 
 
     @Autowired
@@ -90,7 +80,11 @@ public class SecurityConfig {
                                 .authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .oauth2ResourceServer(oauthResourceServer -> oauthResourceServer.jwt(Customizer.withDefaults()))
+                .oauth2ResourceServer(oauthResourceServer -> {
+                    oauthResourceServer.jwt(jwt -> jwt.decoder(jwtDecoder()).jwtAuthenticationConverter(jwtAuthenticationConverter()));
+                    oauthResourceServer.accessDeniedHandler(customAccessDeniedHandler)
+                            .authenticationEntryPoint(customAuthenticationEntryPoint);
+                })
                 .httpBasic(Customizer.withDefaults())
                 .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
@@ -134,10 +128,9 @@ public class SecurityConfig {
 
 
     private String[] ignoredPath() {
-        return new String[] {
-                "/oauth/authorize**", "/login", "/error**",
-                "/swagger-ui/**","/api/v1/auth/login", "/rest-api-docs/**",
-                "/api/v1/products","/","/api/v1/products/search"
+        return new String[]{
+                "/oauth/authorize**", "/login", "/error**", "/", "/problem-solving/**",
+                "/swagger-ui/**", "/api/v1/auth/login", "/rest-api-docs/**", "/api/v1/auth/register"
         };
     }
 

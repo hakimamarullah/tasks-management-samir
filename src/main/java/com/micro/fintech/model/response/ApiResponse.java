@@ -29,8 +29,8 @@ public class ApiResponse<T> {
                 .build();
     }
 
-    public  static ApiResponse<Void> setSuccess(String message) {
-        return ApiResponse.<Void>builder()
+    public  static <T> ApiResponse<T> setSuccess(String message) {
+        return ApiResponse.<T>builder()
                 .code(200)
                 .message(message)
                 .build();

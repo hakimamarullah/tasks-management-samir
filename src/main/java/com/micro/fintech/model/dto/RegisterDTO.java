@@ -31,6 +31,7 @@ public class RegisterDTO {
     @Size(min = 6)
     private String password;
 
+
     @NotNull
     private Role role;
 }

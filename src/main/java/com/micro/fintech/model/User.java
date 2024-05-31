@@ -8,6 +8,8 @@ Version 1.0
 */
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.micro.fintech.model.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -17,14 +19,16 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
 @Setter
 @Getter
-public class User implements UserDetails {
+public class User implements UserDetails, Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,7 +43,9 @@ public class User implements UserDetails {
     private String email;
 
     @Column
+    @JsonProperty("password")
     private String password;
+
 
     @Enumerated(EnumType.STRING)
     @Column
@@ -47,6 +53,10 @@ public class User implements UserDetails {
 
     @Column
     private Boolean enabled = true;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", orphanRemoval = true)
+    @JsonManagedReference
+    private List<Task> tasks;
 
     @JsonIgnore
     @Override
@@ -56,7 +66,7 @@ public class User implements UserDetails {
         return authorities;
     }
 
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Override
     public String getPassword() {
         return this.password;
@@ -86,4 +96,6 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return this.enabled;
     }
+
+
 }

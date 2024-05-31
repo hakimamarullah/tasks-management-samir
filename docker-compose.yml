@@ -1,5 +1,5 @@
 services:
-  mysql:
+  mysql-samir:
     image: mysql:8.0
     restart: unless-stopped
     networks:
@@ -10,7 +10,9 @@ services:
       MYSQL_USER: samir
       MYSQL_PASSWORD: samir
     ports:
-      - "3306:3306"
+      - "3309:3306"
+    volumes:
+      - samir-mysql:/var/lib/mysql
 
   app:
     build:
@@ -20,14 +22,17 @@ services:
     networks:
       - samir-mysql-network
     depends_on:
-      - mysql
+      - mysql-samir
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/samir?useSSL=false&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME: vascomm
-      SPRING_DATASOURCE_PASSWORD: vascomm
-      SPRING_FLYWAY_URL: jdbc:mysql://mysql:3306/samir?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-samir:3309/samir?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: samir
+      SPRING_DATASOURCE_PASSWORD: samir
+
+volumes:
+  samir-mysql:
+
 networks:
   samir-mysql-network:
     driver: bridge
