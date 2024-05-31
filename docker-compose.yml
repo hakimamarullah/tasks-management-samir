@@ -1,0 +1,33 @@
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    networks:
+      - samir-mysql-network
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: samir
+      MYSQL_USER: samir
+      MYSQL_PASSWORD: samir
+    ports:
+      - "3306:3306"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: on-failure
+    networks:
+      - samir-mysql-network
+    depends_on:
+      - mysql
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/samir?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: vascomm
+      SPRING_DATASOURCE_PASSWORD: vascomm
+      SPRING_FLYWAY_URL: jdbc:mysql://mysql:3306/samir?useSSL=false&allowPublicKeyRetrieval=true
+networks:
+  samir-mysql-network:
+    driver: bridge
