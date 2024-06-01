@@ -1,9 +1,9 @@
 services:
-  mysql-samir:
+  mysqldb:
     image: mysql:8.0
+    hostname: mysqldb
+    container_name: mysqldb
     restart: unless-stopped
-    networks:
-      - samir-mysql-network
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: samir
@@ -12,27 +12,23 @@ services:
     ports:
       - "3309:3306"
     volumes:
-      - samir-mysql:/var/lib/mysql
+      - samir-mysql-new:/var/lib/mysql
 
-  app:
+  backend:
     build:
       context: .
       dockerfile: Dockerfile
     restart: on-failure
-    networks:
-      - samir-mysql-network
+    container_name: backend
     depends_on:
-      - mysql-samir
+      - mysqldb
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-samir:3309/samir?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://host.docker.internal:3309/samir?useSSL=false&allowPublicKeyRetrieval=true&useLegacyDatetimeCode=false&serverTimezone=Asia/Jakarta
       SPRING_DATASOURCE_USERNAME: samir
       SPRING_DATASOURCE_PASSWORD: samir
+      MYSQL_PORT: 3309
 
 volumes:
-  samir-mysql:
-
-networks:
-  samir-mysql-network:
-    driver: bridge
+  samir-mysql-new:
