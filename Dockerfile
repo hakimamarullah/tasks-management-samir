@@ -1,18 +1,16 @@
-FROM eclipse-temurin:17-jdk-alpine AS build
-WORKDIR /workspace/app
+FROM eclipse-temurin:17-jdk-alpine AS builder
+WORKDIR /opt/app
 
-COPY mvnw .
-COPY .mvn .mvn
-COPY pom.xml .
-COPY src src
+COPY .mvn/ .mvn
+COPY mvnw pom.xml ./
+RUN ./mvnw dependency:go-offline
+COPY ./src ./src
+RUN ./mvnw clean install -DskipTests
 
-RUN ./mvnw install -DskipTests
-RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
-
-FROM eclipse-temurin:17-jdk-alpine
-VOLUME /tmp
-ARG DEPENDENCY=/workspace/app/target/dependency
-COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
-COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
-COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
-ENTRYPOINT ["java","-cp","app:app/lib/*","com.micro.fintech.TasksManagementApplication"]
+FROM eclipse-temurin:17-jre-alpine
+ENV java_opts=""
+ENV java_args=""
+WORKDIR /opt/app
+EXPOSE 8080
+COPY --from=builder /opt/app/target/*.jar /opt/app/*.jar
+ENTRYPOINT java ${java_opts} -jar /opt/app/*jar ${java_args}
