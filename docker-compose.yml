@@ -14,6 +14,16 @@ services:
     volumes:
       - samir-mysql-new:/var/lib/mysql
 
+  config-server:
+    image: hakimamarullah/starline-scc:v1.0.1
+    restart: on-failure
+    environment:
+      JAVA_OPTS: -DUSERNAME=${USERNAME} -DPERSONAL_ACCESS_TOKEN=${PERSONAL_ACCESS_TOKEN} -Djdk.tls.client.protocols=TLSv1.2
+      JAVA_ARGS: --spring.cloud.config.server.git.skipSslValidation=true
+
+    ports:
+      - "9999:9999"
+
   backend:
     build:
       context: .
@@ -22,12 +32,15 @@ services:
     container_name: backend
     depends_on:
       - mysqldb
+      - config-server
     ports:
       - "8080:8080"
     environment:
+      JAVA_ARGS: --spring.profiles.active=dev
       SPRING_DATASOURCE_URL: jdbc:mysql://host.docker.internal:3309/samir?useSSL=false&allowPublicKeyRetrieval=true&useLegacyDatetimeCode=false&serverTimezone=Asia/Jakarta
       SPRING_DATASOURCE_USERNAME: samir
       SPRING_DATASOURCE_PASSWORD: samir
+      SPRING_CLOUD_CONFIG_URI: http://host.docker.internal:9999?fail-fast=true&max-attempts=10
       MYSQL_PORT: 3309
 
 volumes:
